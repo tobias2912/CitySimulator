@@ -28,11 +28,12 @@ public class car : MonoBehaviour
             //highlight target with a gizmo for 1 sec
             Debug.DrawLine(transform.position, target, Color.red, 2);
             var direction = (target - transform.position).normalized;
-            transform.position += direction * (Time.deltaTime * 10);
             var targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, Time.deltaTime * 100);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2);
+            //move car forwards while turning
+            transform.Translate(Vector3.forward * Time.deltaTime * 10);
             //if we are close to the target, remove it from the route
-            if (Vector3.Distance(transform.position, target) < 0.5f)
+            if (Vector3.Distance(transform.position, target) < 1.0f)
             {
                 Debug.Log("Reached node " + _route[0].Name());
                 //remove the first node
