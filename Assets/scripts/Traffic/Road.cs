@@ -78,7 +78,8 @@ public class RoadNode
 
     public string Name()
     {
-        return Road.gameObject.name;
+        if (Road != null) return Road.gameObject.name;
+        return "no name";
     }
 
     public List<RoadNode> GetNextNodes()

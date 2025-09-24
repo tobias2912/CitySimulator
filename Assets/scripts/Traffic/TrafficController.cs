@@ -163,7 +163,8 @@ public class TrafficController : MonoBehaviour
             //for each entry point, find the closest road node within 5 units and connect it
             foreach (var entryNode in intersection.EntryNodes)
             {
-                var entryWorldPos = intersection.transform.TransformPoint(entryNode.WorldPosition);
+                // var entryWorldPos = intersection.transform.TransformPoint(entryNode.WorldPosition);
+                var entryWorldPos = entryNode.WorldPosition;
                 var closestDistance = float.MaxValue;
                 var closestNode = GetClosestNode(roads, entryWorldPos, closestDistance, null);
 
