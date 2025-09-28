@@ -16,7 +16,7 @@ public class poi : MonoBehaviour
     private float _duration;
     private int _currentOccupancy = 0;
     [SerializeField]
-    private bool hideNPC = false;
+    protected bool hideNPC = false;
 
 
     public void Start()

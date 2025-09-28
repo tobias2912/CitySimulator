@@ -6,9 +6,12 @@ public class RoadEditor : Editor
 {
     private Road _road;
     private const float HandleSize = 0.3f;
+    private bool _showEditor = false; // Flag to toggle editor visibility
 
     private void OnSceneGUI()
     {
+        if (!_showEditor) return; // Only show editor if the flag is true
+
         _road = (Road)target;
 
         // Draw and edit right lane waypoints
@@ -41,12 +44,24 @@ public class RoadEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        GUILayout.Label("Road Editor", EditorStyles.boldLabel);
+        if (_road?.waypoints != null)
+        {
+            GUILayout.Label($"Waypoint Count: {_road.waypoints.Count}");
+        }
+
+        if (GUILayout.Button("Edit Node Positions"))
+        {
+            _showEditor = !_showEditor; // Toggle the flag
+            SceneView.RepaintAll(); // Refresh the scene view to show/hide handles
+        }
 
         if (GUILayout.Button("Add Waypoint"))
         {
             Undo.RecordObject(_road, "Add Waypoint");
             _road.waypoints.Add(new Vector3(3, 0));
         }
+
+        SceneView.RepaintAll();
     }
 }

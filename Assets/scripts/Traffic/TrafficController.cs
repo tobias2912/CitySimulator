@@ -7,8 +7,9 @@ public class TrafficController : MonoBehaviour
 {
     void Start()
     {
-        ConnectCloseNodes();
+       ConnectCloseNodes();
     }
+    
 
     public List<RoadNode> findRoute(Vector3 start, Vector3 end)
     {
@@ -21,6 +22,7 @@ public class TrafficController : MonoBehaviour
         // Find the closest nodes to the start and end positions
         foreach (var road in roads)
         {
+            //TODO: only consider first node 
             var firstNode = road.getFirstNode();
             var lastNode = road.getLastNode();
             if (firstNode == null && lastNode == null) continue;
@@ -181,12 +183,14 @@ public class TrafficController : MonoBehaviour
                 // var exitWorldPos = intersection.transform.TransformPoint(exit.WorldPosition);
                 var exitWorldPos = exit.WorldPosition;
                 var closestDistance = float.MaxValue;
-                Debug.Log("Finding closest node to exit at " + exitWorldPos+" with road count "+roads.Length);
+                // Debug.Log("Finding closest node to exit at " + exitWorldPos+" with road count "+roads.Length);
                 var closestNode = ClosestNode(roads, exitWorldPos, closestDistance, null);
 
                 if (closestNode == null)
                 {
-                    Debug.LogWarning("No close road node found for exit point at " + exitWorldPos);
+                    Debug.LogWarning(intersection.gameObject.name + " No close road node found for exit point at " + exitWorldPos);
+                    //create a red dot at the exit point
+                    Debug.DrawLine(exitWorldPos, exitWorldPos + Vector3.up * 3, Color.red, 15);
                     continue;
                 }
 
@@ -198,8 +202,6 @@ public class TrafficController : MonoBehaviour
                 }
 
                 exit.GetNextNodes().Add(closestNode);
-                Debug.Log("Connected exit point at " + exitWorldPos + " to road node " + closestNode.Name() +
-                          " at distance " + Vector3.Distance(exitWorldPos, closestNode.WorldPosition));
                 Debug.DrawLine(closestNode.WorldPosition, exit.WorldPosition, Color.cyan, 15);
             }
         }

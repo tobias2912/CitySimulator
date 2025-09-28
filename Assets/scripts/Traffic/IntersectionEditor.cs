@@ -7,7 +7,7 @@ namespace DefaultNamespace.Traffic
     [CustomEditor(typeof(Intersection))]
     public class IntersectionEditor : Editor
     {
-        //create handles for each entry and exit point
+        public bool hideHandles = true;
         private Intersection _intersection;
         private const float HandleSize = 0.3f;
 
@@ -15,19 +15,18 @@ namespace DefaultNamespace.Traffic
         {
             _intersection = (Intersection)target;
 
+            if (hideHandles) return;
             // Draw and edit entry points
             Handles.color = Color.red;
             for (var i = 0; i < _intersection.entryPoints.Count; i++)
             {
                 EditorGUI.BeginChangeCheck();
 
-                var newPoint =
-                    Handles.PositionHandle(_intersection.transform.TransformPoint(_intersection.entryPoints[i]),
-                        Quaternion.identity);
+                var newPoint = Handles.PositionHandle(_intersection.entryPoints[i], Quaternion.identity);
                 if (EditorGUI.EndChangeCheck())
                 {
                     Undo.RecordObject(_intersection, "Move Entry Point");
-                    _intersection.entryPoints[i] = _intersection.transform.InverseTransformPoint(newPoint);
+                    _intersection.entryPoints[i] = newPoint;
                 }
             }
 
@@ -66,19 +65,26 @@ namespace DefaultNamespace.Traffic
 
         public override void OnInspectorGUI()
         {
-            DrawDefaultInspector();
-
-            if (GUILayout.Button("Add entry Waypoint"))
+            EditorGUILayout.LabelField("Entry Points Count: " + _intersection.entryPoints.Count);
+            EditorGUILayout.LabelField("Exit Points Count: " + _intersection.exitPoints.Count);
+            if (GUILayout.Button("Add Entry Waypoint"))
             {
-                Undo.RecordObject(_intersection, "Add entry Waypoint");
-                _intersection.entryPoints.Add(new Vector3(3, 0));
+                Undo.RecordObject(_intersection, "Add Entry Waypoint");
+                _intersection.entryPoints.Add(Vector3.zero);
             }
 
-            if (GUILayout.Button("Add exit Waypoint"))
+            if (GUILayout.Button("Add Exit Waypoint"))
             {
-                Undo.RecordObject(_intersection, "Add exit Waypoint");
-                _intersection.exitPoints.Add(new Vector3(3, 0));
+                Undo.RecordObject(_intersection, "Add Exit Waypoint");
+                _intersection.exitPoints.Add(Vector3.zero);
             }
+
+            if (GUILayout.Button(hideHandles ? "Show Handles" : "Hide Handles"))
+            {
+                Undo.RecordObject(_intersection, "Toggle Handles");
+                hideHandles = !hideHandles;
+            }
+            SceneView.RepaintAll();
         }
     }
 }
