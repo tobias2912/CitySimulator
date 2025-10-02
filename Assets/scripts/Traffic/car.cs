@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Traffic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class car : MonoBehaviour
@@ -18,7 +19,7 @@ public class car : MonoBehaviour
         controller = FindObjectOfType<TrafficController>();
         if (destination != null) StartCoroutine(FindRouteWithDelay());
     }
-    
+
     private IEnumerator FindRouteWithDelay()
     {
         yield return new WaitForSeconds(1.5f); // Delay of 0.5 seconds
@@ -48,6 +49,7 @@ public class car : MonoBehaviour
                     {
                         if (!targetNode.Intersection.IsOpen(targetNode, _route[1]))
                         {
+                            MoveCarForward(target, true);
                             return;
                         }
                     }
@@ -59,14 +61,14 @@ public class car : MonoBehaviour
 
                 _previousNode = targetNode;
                 if (_route.Count > 0) Debug.DrawLine(transform.position, newTarget.WorldPosition, Color.green, 1);
-                
+
                 if (newTarget.IsIntersectionExitPoint)
                 {
                     targetNode.Intersection.LockIntersection(_previousNode, newTarget);
                     // controller.LockIntersection(_previousNode, newTarget);
                 }
             }
-            
+
             MoveCarForward(target);
         }
         else
@@ -79,14 +81,31 @@ public class car : MonoBehaviour
         }
     }
 
-    private void MoveCarForward(Vector3 target)
+    private float _currentSpeed = 0f;
+    private float _targetSpeed = 10f;
+    private float _accelerationRate = 1.1f; // Controls how quickly the car accelerates
+
+    private void MoveCarForward(Vector3 target, bool isBreaking = false)
     {
         var direction = (target - transform.position).normalized;
         var targetRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2.5f);
-        //move car forwards while turning
-        var turnFactor = Quaternion.Angle(transform.rotation, targetRotation) / 110.0f; // Normalize turn angle
-        var speed = Mathf.Lerp(10, 3, turnFactor); // Reduce speed based on turn angle
-        transform.Translate(Vector3.forward * Time.deltaTime * speed);
+        if (isBreaking)
+        {
+            _targetSpeed = 0f;
+            _accelerationRate = 3.0f; // Increase deceleration rate when braking
+        }
+        else
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2.0f);
+            var turnFactor = Quaternion.Angle(transform.rotation, targetRotation) / 110.0f;
+            _targetSpeed = Mathf.Lerp(10, 3, turnFactor);
+            _accelerationRate = 1.5f; // Normal acceleration rate
+        }
+
+        // Adjust target speed based on turn angle
+        _currentSpeed = Mathf.Lerp(_currentSpeed, _targetSpeed, Time.deltaTime * _accelerationRate);
+
+        // Move the car forward
+        transform.Translate(Vector3.forward * Time.deltaTime * _currentSpeed);
     }
 }
