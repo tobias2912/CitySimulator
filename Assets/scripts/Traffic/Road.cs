@@ -1,11 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Traffic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-public class Road : MonoBehaviour
+public class Road : RoadComponent
 {
     public List<Vector3> waypoints = new List<Vector3>();
     private RoadNode firstNode;
@@ -69,51 +70,6 @@ public class Road : MonoBehaviour
         }
 
         firstNode = head;
-    }
-}
-
-public class RoadNode
-{
-    private readonly List<RoadNode> _nextNodes = new();
-    public Vector3 WorldPosition;
-    public Road Road;
-    public bool IsIntersectionEntryPoint { get; }
-    public bool IsIntersectionExitPoint { get; }
-    private bool isLocked;
-
-    public RoadNode(bool isIntersectionEntryPoint = false, bool isIntersectionExitPoint = false)
-    {
-        IsIntersectionEntryPoint = isIntersectionEntryPoint;
-        isLocked = false;
-    }
-
-    public void Unlock()
-    {
-        isLocked = false;
-    }
-
-    public bool IsLocked()
-    {
-        return isLocked;
-    }
-
-    public string Name()
-    {
-        if (Road != null) return Road.gameObject.name;
-        return "no name";
-    }
-
-    public List<RoadNode> GetNextNodes()
-    {
-        return _nextNodes;
-    }
-
-    public void Lock(float f)
-    {
-        isLocked = true;
-        //unlock after f seconds
-        Debug.DrawLine(WorldPosition, WorldPosition + Vector3.up * 5, Color.red, f);
-        CoroutineHelper.ExecuteAfterDelay(f, Unlock);
     }
 }
 

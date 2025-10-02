@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Traffic;
 using UnityEngine;
 
 public class car : MonoBehaviour
@@ -9,6 +10,7 @@ public class car : MonoBehaviour
     public GameObject destination;
     public bool driveRandomly = true;
     private List<RoadNode> _route = new();
+    private RoadNode _previousNode;
 
 
     void Start()
@@ -35,44 +37,37 @@ public class car : MonoBehaviour
         //move towards the next node in the route
         if (_route.Count > 0)
         {
-            var nextNode = _route[0];
-            var target = nextNode.WorldPosition;
-
-            // if (nextNode.IsLocked())
-            // {
-            //     Debug.Log("Node is locked, waiting...");
-            //     //wait 1 second
-            //     return;
-            // }
-            //if intersection, lock next node
+            var targetNode = _route[0];
+            var target = targetNode.WorldPosition;
 
             if (Vector3.Distance(transform.position, target) < 3.0f)
             {
-                Debug.Log("Reached node " + nextNode.Name());
-                //if next node is intersection entry point, check if node is locked
-                if (nextNode.IsIntersectionEntryPoint && nextNode.IsLocked())
+                if (_route.Count > 1)
                 {
-                    Debug.Log("Intersection entry point is locked, waiting...");
-                    return;
+                    if (targetNode.IsIntersectionEntryPoint)
+                    {
+                        if (!targetNode.Intersection.IsOpen(targetNode, _route[1]))
+                        {
+                            return;
+                        }
+                    }
                 }
 
                 _route.RemoveAt(0);
-                //draw line to next node
-                if (_route.Count > 0) Debug.DrawLine(transform.position, nextNode.WorldPosition, Color.green, 1);
-                if (nextNode.IsIntersectionExitPoint)
+                if (_route.Count == 0) return;
+                var newTarget = _route[0];
+
+                _previousNode = targetNode;
+                if (_route.Count > 0) Debug.DrawLine(transform.position, newTarget.WorldPosition, Color.green, 1);
+                
+                if (newTarget.IsIntersectionExitPoint)
                 {
-                    nextNode.Lock(3.0f); // Lock for 3 seconds
-                    Debug.Log("Locked intersection node for 3 seconds");
+                    targetNode.Intersection.LockIntersection(_previousNode, newTarget);
+                    // controller.LockIntersection(_previousNode, newTarget);
                 }
             }
-
-            var direction = (target - transform.position).normalized;
-            var targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2.5f);
-            //move car forwards while turning
-            var turnFactor = Quaternion.Angle(transform.rotation, targetRotation) / 110.0f; // Normalize turn angle
-            var speed = Mathf.Lerp(10, 3, turnFactor); // Reduce speed based on turn angle
-            transform.Translate(Vector3.forward * Time.deltaTime * speed);
+            
+            MoveCarForward(target);
         }
         else
         {
@@ -82,5 +77,16 @@ public class car : MonoBehaviour
             var road = GetRandomRoad();
             _route = controller.findRoute(transform.position, road.transform.position);
         }
+    }
+
+    private void MoveCarForward(Vector3 target)
+    {
+        var direction = (target - transform.position).normalized;
+        var targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2.5f);
+        //move car forwards while turning
+        var turnFactor = Quaternion.Angle(transform.rotation, targetRotation) / 110.0f; // Normalize turn angle
+        var speed = Mathf.Lerp(10, 3, turnFactor); // Reduce speed based on turn angle
+        transform.Translate(Vector3.forward * Time.deltaTime * speed);
     }
 }
