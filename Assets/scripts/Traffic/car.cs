@@ -12,12 +12,20 @@ public class car : MonoBehaviour
     public bool driveRandomly = true;
     private List<RoadNode> _route = new();
     private RoadNode _previousNode;
+    private float _maxDistance = 6.0f;
 
 
     void Start()
     {
         controller = FindObjectOfType<TrafficController>();
         if (destination != null) StartCoroutine(FindRouteWithDelay());
+        //multiply max distance by length of collider
+        var collider = GetComponent<Collider>();
+        if (collider != null)
+        {
+            _maxDistance *= collider.bounds.size.z/1f;
+            // maxDistance -= 15;
+        }
     }
 
     private IEnumerator FindRouteWithDelay()
@@ -35,7 +43,8 @@ public class car : MonoBehaviour
 
     void Update()
     {
-        //move towards the next node in the route
+        if (CollisionCheck()) return;
+
         if (_route.Count > 0)
         {
             var targetNode = _route[0];
@@ -74,28 +83,57 @@ public class car : MonoBehaviour
         else
         {
             if (!driveRandomly) return;
-            //find new route
+            // Find new route
             Debug.Log("Route complete, finding new route");
             var road = GetRandomRoad();
             _route = controller.findRoute(transform.position, road.transform.position);
         }
     }
 
-    private float _currentSpeed = 0f;
+    private RaycastHit[] _hits = new RaycastHit[3]; // Pre-allocated array
+
+    private bool CollisionCheck()
+    {
+        //do one raycast slightly to the left, one to the right and one in the middle
+        var leftOffset = transform.position - transform.right * 0.8f;
+        var rightOffset = transform.position + transform.right * 0.8f;
+        Debug.DrawRay(leftOffset, transform.forward * _maxDistance, Color.blue);
+        Debug.DrawRay(rightOffset, transform.forward * _maxDistance, Color.blue);
+        var size = Physics.RaycastNonAlloc(leftOffset, transform.forward, _hits, _maxDistance, LayerMask.GetMask("Vehicles"));
+        for (var i = 0; i < size; i++)
+        {
+            var hit = _hits[i];
+            if (hit.collider.gameObject == gameObject) continue;
+            MoveCarForward(Vector3.zero, true);
+            return true;
+        }
+
+        size = Physics.RaycastNonAlloc(rightOffset, transform.forward, _hits, _maxDistance, LayerMask.GetMask("Vehicles"));
+        for (var i = 0; i < size; i++)
+        {
+            var hit = _hits[i];
+            if (hit.collider.gameObject == gameObject) continue;
+            MoveCarForward(Vector3.zero, true);
+            return true;
+        }
+        return false;
+    }
+
+    private float _currentSpeed;
     private float _targetSpeed = 10f;
     private float _accelerationRate = 1.1f; // Controls how quickly the car accelerates
 
     private void MoveCarForward(Vector3 target, bool isBreaking = false)
     {
-        var direction = (target - transform.position).normalized;
-        var targetRotation = Quaternion.LookRotation(direction);
         if (isBreaking)
         {
             _targetSpeed = 0f;
-            _accelerationRate = 3.0f; // Increase deceleration rate when braking
+            _accelerationRate = 8.0f; // Increase deceleration rate when braking
         }
         else
         {
+            var direction = (target - transform.position).normalized;
+            var targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2.0f);
             var turnFactor = Quaternion.Angle(transform.rotation, targetRotation) / 110.0f;
             _targetSpeed = Mathf.Lerp(10, 3, turnFactor);
