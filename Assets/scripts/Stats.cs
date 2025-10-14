@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class NpcHealthStats
 {
@@ -8,6 +9,7 @@ public class NpcHealthStats
 
     private const float MaxStatValue = 100f;
     private const float MinStatValue = 0f;
+    
 
     public NpcHealthStats()
     {
@@ -15,6 +17,7 @@ public class NpcHealthStats
         Hunger = Random.Range(50f, MaxStatValue);
         Sleep = Random.Range(50f, MaxStatValue);
         Recreation = Random.Range(50f, MaxStatValue);
+        Recreation = 45;
     }
 
     public void UpdateStats(float hungerDecay, float sleepDecay, float recreationDecay)
@@ -44,4 +47,5 @@ public class NpcHealthStats
     {
         return Hunger <= MinStatValue || Sleep <= MinStatValue || Recreation <= MinStatValue;
     }
+
 }

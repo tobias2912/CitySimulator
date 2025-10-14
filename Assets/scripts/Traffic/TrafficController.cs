@@ -5,13 +5,15 @@ using UnityEngine;
 
 public class TrafficController : MonoBehaviour
 {
+    public List<car> carPrefabs;
+
     void Start()
     {
        ConnectCloseNodes();
     }
     
 
-    public List<RoadNode> findRoute(Vector3 start, Vector3 end)
+    public List<RoadNode> findCarRoute(Vector3 start, Vector3 end)
     {
         var roads = FindObjectsOfType<Road>();
         RoadNode closestStartNode = null;
@@ -40,10 +42,10 @@ public class TrafficController : MonoBehaviour
         }
 
         //log names of start and end nodes
-        Debug.Log("Closest start node: " + closestStartNode.Name() + " at distance " +
-                  Vector3.Distance(start, closestStartNode.WorldPosition));
-        Debug.Log("Closest end node: " + closestEndNode.Name() + " at distance " +
-                  Vector3.Distance(end, closestEndNode.WorldPosition));
+        // Debug.Log("Closest start node: " + closestStartNode.Name() + " at distance " +
+        //           Vector3.Distance(start, closestStartNode.WorldPosition));
+        // Debug.Log("Closest end node: " + closestEndNode.Name() + " at distance " +
+        //           Vector3.Distance(end, closestEndNode.WorldPosition));
 
         // If we found valid start and end nodes, build the route
         var route = new List<RoadNode>();

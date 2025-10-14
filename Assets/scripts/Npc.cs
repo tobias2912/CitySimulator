@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -11,6 +14,8 @@ public class Npc : MonoBehaviour
     private GameController _gameController;
 
     private NpcActivity _currentActivity;
+    private NpcMovement _npcMovement;
+    private readonly List<string> _logMessages = new();
 
     [CanBeNull] private poi _currentPoi;
     private float _maxWalkingDuration;
@@ -19,6 +24,8 @@ public class Npc : MonoBehaviour
     {
         Stats = new NpcHealthStats();
         _gameController = GameObject.Find("GameController").GetComponent<GameController>();
+        var trafficController = GameObject.Find("TrafficController").GetComponent<TrafficController>();
+        _npcMovement = new NpcMovement(this, trafficController);
         apartment = _gameController.AssignApartment(this);
         //set a random color of child mesh renderer
         var meshRenderer = GetComponentInChildren<MeshRenderer>();
@@ -36,10 +43,6 @@ public class Npc : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log("Enter " + other.gameObject.name);
-        // if (other.gameObject.CompareTag("POI"))
-        // {
-        //     var poi = other.gameObject.GetComponent<poi>();
-        // }
     }
 
     private void Update()
@@ -51,10 +54,9 @@ public class Npc : MonoBehaviour
             return;
         }
 
-        var targetPosition = _currentActivity.Destination;
+        _npcMovement.Update();
 
-        //check if npc is at target position
-        if (targetPosition != null && Vector3.Distance(transform.position, (Vector3)targetPosition) < 2.1f)
+        if (_npcMovement.IsAtDestination())
         {
             // Debug.Log("Reached " + _currentPoi?.activityType);
             _currentActivity.CompleteActivity();
@@ -66,6 +68,7 @@ public class Npc : MonoBehaviour
             {
                 _currentActivity = null;
             }
+
             return;
         }
 
@@ -94,11 +97,11 @@ public class Npc : MonoBehaviour
         _currentActivity.StartActivity(this, npcActivity.Destination);
         if (npcActivity.Destination != null)
         {
-            WalkToPosition((Vector3)npcActivity.Destination);
+            TravelToPosition((Vector3)npcActivity.Destination);
         }
 
         if (poi != null) _currentPoi = poi.GetComponent<poi>();
-        if(hideNPC) HideNpcMesh();
+        if (hideNPC) HideNpcMesh();
     }
 
     private void OnMouseDown()
@@ -154,16 +157,16 @@ public class Npc : MonoBehaviour
         }
     }
 
-    private void WalkToPosition(Vector3 transformPosition)
+    private void TravelToPosition(Vector3 destination)
     {
-        //move towards target using navigation mesh agent
-        GetComponent<UnityEngine.AI.NavMeshAgent>().SetDestination(transformPosition);
+        _npcMovement.SetDestination(destination);
     }
 
     public NpcActivity GetCurrentActivity()
     {
         return _currentActivity;
     }
+
     public void HideNpcMesh()
     {
         var meshRenderer = GetComponentInChildren<MeshRenderer>();
@@ -180,5 +183,20 @@ public class Npc : MonoBehaviour
         {
             meshRenderer.enabled = true;
         }
+    }
+
+    public void LogMessage(string message)
+    {
+        _logMessages.Add($"{DateTime.Now:mm:ss} - {message}");
+        if (_logMessages.Count > 10)
+        {
+            _logMessages.RemoveAt(0);
+        }
+    }
+
+
+    public IEnumerable GetLogMessages()
+    {
+        return _logMessages;
     }
 }

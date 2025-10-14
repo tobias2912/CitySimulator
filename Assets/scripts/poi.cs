@@ -37,7 +37,7 @@ public class poi : MonoBehaviour
     }
     public void StartPoiInteraction(Npc npc)
     {
-        Debug.Log("Starting interaction " + activityType + " for duration " + _duration);
+        npc.LogMessage("Starting " + activityType);
         //destination is null to avoid repeat triggering
         npc.StartNewActivity(new NpcActivity(activityType.ToString(), _duration, null), this);
         _currentOccupancy++;
@@ -48,7 +48,7 @@ public class poi : MonoBehaviour
     }
     public void EndPoiInteraction(Npc npc)
     {
-        Debug.Log("Ending interaction " + activityType);
+        npc.LogMessage("Finished " + activityType);
         _currentOccupancy--;
         switch (activityType)
         {

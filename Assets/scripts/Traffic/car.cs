@@ -9,11 +9,10 @@ public class car : MonoBehaviour
     private TrafficController controller;
 
     public GameObject destination;
-    public bool driveRandomly = true;
+    public bool driveRandomly = false;
     private List<RoadNode> _route = new();
     private RoadNode _previousNode;
     private float _maxDistance = 6.0f;
-
 
     void Start()
     {
@@ -28,10 +27,15 @@ public class car : MonoBehaviour
         }
     }
 
+    public void setRoute(List<RoadNode> route)
+    {
+        _route = route;
+    }
+
     private IEnumerator FindRouteWithDelay()
     {
         yield return new WaitForSeconds(1.5f); // Delay of 0.5 seconds
-        _route = controller.findRoute(transform.position, destination.transform.position);
+        _route = controller.findCarRoute(transform.position, destination.transform.position);
         Debug.Log("start route found with " + _route.Count + " nodes.");
     }
 
@@ -74,7 +78,6 @@ public class car : MonoBehaviour
                 if (newTarget.IsIntersectionExitPoint)
                 {
                     targetNode.Intersection.LockIntersection(_previousNode, newTarget);
-                    // controller.LockIntersection(_previousNode, newTarget);
                 }
             }
 
@@ -86,7 +89,7 @@ public class car : MonoBehaviour
             // Find new route
             Debug.Log("Route complete, finding new route");
             var road = GetRandomRoad();
-            _route = controller.findRoute(transform.position, road.transform.position);
+            _route = controller.findCarRoute(transform.position, road.transform.position);
         }
     }
 

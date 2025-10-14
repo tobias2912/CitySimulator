@@ -47,5 +47,11 @@ public class NpcInfo : MonoBehaviour
         {
             textMeshPro.text += "Progress: <color=orange>Idle</color>\n";
         }
+
+        textMeshPro.text += "Log:\n";
+        foreach (var logMessage in npc.GetLogMessages())
+        {
+            textMeshPro.text += $"{logMessage}\n";
+        }
     }
 }
